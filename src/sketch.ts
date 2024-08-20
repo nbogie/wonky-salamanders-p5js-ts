@@ -11,7 +11,7 @@ interface CreatureFoot {
     pos: p5.Vector;
     size: number;
     facing: number;
-    sign: number;
+    sign: -1 | 1;
 }
 
 interface CreatureHead {
@@ -393,7 +393,7 @@ function getMousePos() {
 
 function createFeet(seg: CreatureSegment): CreatureFoot[] {
     const feet = [];
-    for (const sign of [-1, 1]) {
+    for (const sign of [-1, 1] as (-1 | 1)[]) {
         feet.push({
             pos: calcFootPositionForSegment(seg, sign),
             sign,
@@ -442,7 +442,7 @@ function updateSegmentFeet(cr: Creature, seg: CreatureSegment) {
     }
 }
 
-function calcFootPositionForSegment(seg: CreatureSegment, sign: number) {
+function calcFootPositionForSegment(seg: CreatureSegment, sign: 1 | -1) {
     const footAngleOffset = (sign * PI) / 8;
     const distToFoot = seg.size * config.maxFootDistMultiplier;
     const vecTowardsFoot = p5.Vector.fromAngle(
