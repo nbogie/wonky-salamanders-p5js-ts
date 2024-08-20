@@ -147,16 +147,15 @@ function drawCreature(cr: Creature) {
 
 function drawCreatureContinuous(cr: Creature) {
     const { tail, colour } = cr;
+    const pts = collectPoints(cr.head, tail);
 
     push();
     fill(colour);
-    const pts = collectPoints(cr.head, tail);
-
+    drawCreatureLegsForContinuous(cr, cr.tail, true);
+    drawCreatureLegsForContinuous(cr, cr.tail, false);
     fillShape(pts, 10, color(30));
     fillShape(pts, 4, color("orange"));
-
     drawCreatureHeadForContinuous(cr);
-
     pop();
 }
 
@@ -268,6 +267,20 @@ function drawCreatureTail(
     }
 }
 
+function drawCreatureLegsForContinuous(
+    cr: Creature,
+    tail: CreatureSegment[],
+    isOutline: boolean
+) {
+    for (const seg of tail) {
+        for (const foot of seg.feet) {
+            drawFoot(cr, seg, foot);
+            //leg
+            drawLeg(cr, seg, foot, isOutline);
+        }
+    }
+}
+
 function createCreature(
     id: number,
     { followMouse } = {
@@ -319,7 +332,8 @@ function createCreatureTail({
             size,
             feet: [] as CreatureFoot[],
         };
-        const segmentShouldHaveFeet = (i - 1) % 4 === 0; //&& i < numSegments*0.6;
+        const segmentShouldHaveFeet =
+            (i - 1) % 4 === 0 && i < numSegments * 0.6;
         const feet = segmentShouldHaveFeet ? createFeet(seg) : [];
         seg.feet.push(...feet);
         segments.push(seg);
