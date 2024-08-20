@@ -1,5 +1,4 @@
 //taken from my code at https://openprocessing.org/sketch/2330168
-
 //which is roughly following https://x.com/TheRujiK/status/969581641680195585
 interface Creature {
     phase: number;
@@ -42,6 +41,7 @@ const config = {
     maxFootprintAge: 200,
     maxFootDistMultiplier: 2.5, //leg length,
     useSquares: true,
+    drawContinuousShape: true,
 };
 
 function setup() {
@@ -56,7 +56,9 @@ function draw() {
         drawFootprint(footprint);
     }
     for (const creature of creatures) {
-        drawCreature(creature);
+        config.drawContinuousShape
+            ? drawCreatureContinuous(creature)
+            : drawCreature(creature);
         updateCreature(creature);
     }
     footprints.forEach((f) => f.age++);
@@ -64,12 +66,29 @@ function draw() {
     if (frameCount % 60 === 0) {
         footprints = footprints.filter((f) => f.age < config.maxFootprintAge);
     }
+    textSize(20);
+    text("'c' to toggle continuous shape", 10, 30);
 }
 
 function keyPressed() {
     if (key === "r") {
         regenerate();
     }
+    if (key === "c") {
+        toggleBooleanSetting("drawContinuousShape");
+    }
+}
+
+//BooleanKeys<Config> is the union of the keys of all the boolean properties in Config, but not the string or numeric ones.
+type BooleanKeys<T> = {
+    [K in keyof T]: T[K] extends boolean ? K : never;
+}[keyof T];
+
+function toggleBooleanSetting<K extends BooleanKeys<typeof config>>(
+    key: K
+): boolean {
+    const prevValue = config[key];
+    return (config[key] = !prevValue);
 }
 
 function regenerate() {
@@ -103,30 +122,75 @@ function drawCreature(cr: Creature) {
 
     push();
 
+    //outline
+    strokeWeight(10);
     fill(colour);
     // noStroke()
 
-    //outline
-    strokeWeight(10);
-
     drawCreatureTail(cr, tail, true);
-    drawCreatureHead(cr);
+    drawCreatureHeadAsBox(cr);
 
     stroke("orange");
     strokeWeight(5);
 
     drawCreatureTail(cr, tail, true);
-    drawCreatureHead(cr);
+    drawCreatureHeadAsBox(cr);
 
     noStroke();
 
     drawCreatureTail(cr, tail, false);
-    drawCreatureHead(cr);
+    drawCreatureHeadAsBox(cr);
 
     pop();
 }
 
-function drawCreatureHead({ head }: Creature) {
+function drawCreatureContinuous(cr: Creature) {
+    const { tail, colour } = cr;
+
+    push();
+    fill(colour);
+    const pts = collectPoints(cr.head, tail);
+
+    fillShape(pts, 10, color(30));
+    fillShape(pts, 4, color("orange"));
+
+    drawCreatureHeadForContinuous(cr);
+
+    pop();
+}
+
+function fillShape(pts: p5.Vector[], weight: number, colr: p5.Color) {
+    strokeWeight(weight);
+    stroke(colr);
+    beginShape();
+    for (const pt of pts) {
+        vertex(pt.x, pt.y);
+    }
+    endShape(CLOSE);
+}
+
+function drawCreatureHeadForContinuous({ head }: Creature) {
+    const sz = head.size;
+    push();
+    translate(head.pos);
+    rotate(head.facing);
+    rectMode(CENTER);
+
+    //eyes
+    strokeWeight(1);
+
+    for (const sign of [-1, 1]) {
+        push();
+        translate(0, sign * sz * 0.5);
+        fill("white");
+        circle(0, 0, sz / 2);
+        fill(30);
+        circle(0, 0, sz / 4);
+        pop();
+    }
+    pop();
+}
+function drawCreatureHeadAsBox({ head }: Creature) {
     const sz = head.size;
     push();
     translate(head.pos);
@@ -395,4 +459,35 @@ function randomCreatureColour() {
     const c = color(random(360), random(60, 100), 100);
     pop();
     return c;
+}
+function collectPoints(
+    head: CreatureHead,
+    tail: CreatureSegment[]
+): p5.Vector[] {
+    const headPoints = getPointPairsForSegmentOrHead(head);
+
+    const midpoints = [PI / 8, 0, -PI / 8].map((angle) =>
+        polarToCartesian(head.size / 2, head.facing + angle).add(head.pos)
+    );
+
+    const ptPairs = tail.map(getPointPairsForSegmentOrHead);
+    return [
+        headPoints[0],
+        ...ptPairs.map((pair) => pair[0]),
+        ...[...ptPairs].reverse().map((pair) => pair[1]),
+        headPoints[1],
+        ...midpoints,
+    ];
+}
+
+function getPointPairsForSegmentOrHead(
+    seg: CreatureHead | CreatureSegment
+): [p5.Vector, p5.Vector] {
+    return [-PI / 2, PI / 2].map((angleOffset) =>
+        polarToCartesian(seg.size / 2, seg.facing + angleOffset).add(seg.pos)
+    ) as [p5.Vector, p5.Vector];
+}
+
+function polarToCartesian(r: number, theta: number): p5.Vector {
+    return createVector(r * cos(theta), r * sin(theta));
 }
