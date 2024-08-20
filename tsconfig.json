@@ -1,13 +1,14 @@
 {
-  "compilerOptions": {
-    "module": "none",
-    "noImplicitAny": true,
-    "outFile": "./build/build.js",
-    "preserveConstEnums": true,
-    "removeComments": true,
-    "rootDir": "./src",
-    "sourceMap": true,
-    "target": "es6",
-    "moduleResolution": "node"
-  }
+    "compilerOptions": {
+        "module": "none",
+        "noImplicitAny": true,
+        "outFile": "./build/build.js",
+        "preserveConstEnums": true,
+        "removeComments": false,
+        "rootDir": "./src",
+        "sourceMap": true,
+        "target": "es6",
+        "moduleResolution": "node",
+        "skipLibCheck": true
+    }
 }

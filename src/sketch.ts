@@ -1,6 +1,7 @@
-//taken from my code at https://openprocessing.org/sketch/2330168
-//which is roughly following https://x.com/TheRujiK/status/969581641680195585
+// Taken from my code at https://openprocessing.org/sketch/2330168
+// which is roughly following https://x.com/TheRujiK/status/969581641680195585
 interface Creature {
+    id: number;
     phase: number;
     isMouseFollowing: any;
     head: CreatureHead;
@@ -96,10 +97,10 @@ function regenerate() {
     creatures = [];
 
     for (let i = 0; i < 7; i++) {
-        creatures.push(createCreature());
+        creatures.push(createCreature(i));
     }
     creatures.push(
-        createCreature({
+        createCreature(8, {
             followMouse: true,
         })
     );
@@ -268,6 +269,7 @@ function drawCreatureTail(
 }
 
 function createCreature(
+    id: number,
     { followMouse } = {
         followMouse: false,
     }
@@ -281,6 +283,7 @@ function createCreature(
     };
     const phase = random(TWO_PI);
     return {
+        id,
         head,
         phase,
         isMouseFollowing: followMouse,
@@ -308,7 +311,7 @@ function createCreatureTail({
     const segments = [];
     for (let i = 0; i < numSegments; i++) {
         const t = PI * map(i, 0, numSegments - 1, 0.3, 1, true);
-        const size = map(sin(t), 0, 1, 0, 1, true) * maxSize;
+        const size = map(sin(t), 0, 1, 0.3, 1, true) * maxSize;
 
         const seg = {
             pos: createVector(i * 20, 100 * sin(phase + i / 8)).add(headPos),
@@ -466,17 +469,26 @@ function collectPoints(
 ): p5.Vector[] {
     const headPoints = getPointPairsForSegmentOrHead(head);
 
-    const midpoints = [PI / 8, 0, -PI / 8].map((angle) =>
+    const midpointsForHead = [PI / 8, 0, -PI / 8].map((angle) =>
         polarToCartesian(head.size / 2, head.facing + angle).add(head.pos)
+    );
+    const lastSegment = tail.at(-1);
+
+    const midpointsForTail = [PI / 8, 0, -PI / 8].map((angle) =>
+        polarToCartesian(
+            lastSegment.size / 2,
+            PI + lastSegment.facing + angle
+        ).add(lastSegment.pos)
     );
 
     const ptPairs = tail.map(getPointPairsForSegmentOrHead);
     return [
         headPoints[0],
         ...ptPairs.map((pair) => pair[0]),
+        ...midpointsForTail,
         ...[...ptPairs].reverse().map((pair) => pair[1]),
         headPoints[1],
-        ...midpoints,
+        ...midpointsForHead,
     ];
 }
 
