@@ -1,5 +1,3 @@
-// Taken from my code at https://openprocessing.org/sketch/2330168
-// which is roughly following https://x.com/TheRujiK/status/969581641680195585
 interface Creature {
     id: number;
     phase: number;
@@ -35,6 +33,8 @@ interface Footprint {
     age: number;
 }
 
+// Taken from my code at https://openprocessing.org/sketch/2330168
+// which is roughly following https://x.com/TheRujiK/status/969581641680195585
 let creatures: Creature[];
 let footprints: Footprint[];
 
